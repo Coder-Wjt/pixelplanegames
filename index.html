@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>像素飞机大战</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <title>像素飞机大战 - 移动端优化版</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
@@ -13,13 +13,27 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            -webkit-overflow-scrolling: touch;
         }
 
         body {
             background: linear-gradient(135deg, #0a0a0a, #1a1a2e);
             font-family: 'Orbitron', monospace;
-            overflow: hidden;
-            user-select: none;
+            touch-action: none;
         }
 
         .pixel-font {
@@ -34,6 +48,9 @@
             image-rendering: pixelated;
             image-rendering: -moz-crisp-edges;
             image-rendering: crisp-edges;
+            touch-action: none;
+            max-width: 100vw;
+            max-height: 100vh;
         }
 
         .game-ui {
@@ -88,9 +105,12 @@
             text-transform: uppercase;
             transition: all 0.3s ease;
             cursor: pointer;
+            touch-action: manipulation;
+            min-height: 48px;
+            min-width: 120px;
         }
 
-        .btn-game:hover {
+        .btn-game:hover, .btn-game:active {
             background: linear-gradient(45deg, #2a5298, #1e3c72);
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
             transform: translateY(-2px);
@@ -121,20 +141,22 @@
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             border-radius: 50px;
-            padding: 10px;
-            border: 2px solid #00ffff;
+            padding: 15px;
+            border: 3px solid #00ffff;
+            touch-action: none;
         }
 
         .control-pad {
-            width: 120px;
-            height: 120px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,255,255,0.3), rgba(0,255,255,0.1));
-            border: 3px solid #00ffff;
+            background: radial-gradient(circle, rgba(0,255,255,0.4), rgba(0,255,255,0.1));
+            border: 4px solid #00ffff;
             position: relative;
             cursor: pointer;
+            touch-action: none;
         }
 
         .control-center {
@@ -142,11 +164,16 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            background: #00ffff;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 255, 255, 0.8);
             border-radius: 50%;
-            opacity: 0.8;
+            transition: all 0.1s ease;
+        }
+
+        .control-center.active {
+            background: rgba(0, 255, 255, 1);
+            transform: translate(-50%, -50%) scale(1.2);
         }
 
         .stars-bg {
@@ -183,6 +210,69 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
             z-index: 1000;
         }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .game-ui {
+                font-size: 12px;
+                padding: 8px;
+            }
+            
+            .btn-game {
+                font-size: 16px;
+                padding: 12px 16px;
+            }
+            
+            #gameCanvas {
+                max-width: 100vw;
+                max-height: calc(100vh - 200px);
+            }
+            
+            .level-info {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .mobile-controls {
+                bottom: 10px;
+            }
+            
+            .control-pad {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .control-center {
+                width: 40px;
+                height: 40px;
+            }
+        }
+
+        /* 防止iOS Safari的弹性滚动 */
+        .container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 调试信息样式 */
+        #debugInfo {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 5px;
+            font-size: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            display: none;
+            z-index: 1000;
+        }
     </style>
 </head>
 <!-- Google tag (gtag.js) -->
@@ -195,228 +285,262 @@
   gtag('config', 'G-78HMV9768M');
 </script>
 <body>
-    <div class="stars-bg"></div>
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <!-- Game Container -->
-        <div class="relative">
-            <!-- Game Canvas -->
-            <canvas id="gameCanvas" width="800" height="600" class="block mx-auto"></canvas>
+    <div class="container">
+        <div class="stars-bg"></div>
+        <div class="min-h-screen flex items-center justify-center p-4">
+            <!-- Debug Info -->
+            <div id="debugInfo"></div>
             
-            <!-- Game UI Overlay -->
-            <div id="gameUI" class="absolute top-0 left-0 w-full h-full pointer-events-none">
-                <!-- Top HUD -->
-                <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
-                    <!-- Left Info Panel -->
-                    <div class="game-ui p-3 rounded-lg">
-                        <div class="text-cyan-400 pixel-font text-sm mb-2">
-                            <div>关卡: <span id="currentLevel" class="text-yellow-400">1</span></div>
-                            <div>分数: <span id="score" class="text-green-400">0</span></div>
-                            <div>经验: <span id="experience" class="text-purple-400">0</span></div>
-                            <div>目标: <span id="levelTarget" class="text-orange-400">击败10个敌机</span></div>
-                        </div>
-                        <!-- Health Bar -->
-                        <div class="mb-2">
-                            <div class="text-xs text-red-400 mb-1">生命值</div>
-                            <div class="w-32 h-4 bg-gray-800 rounded">
-                                <div id="healthBar" class="health-bar h-full rounded" style="width: 100%"></div>
+            <!-- Game Container -->
+            <div class="relative">
+                <!-- Game Canvas -->
+                <canvas id="gameCanvas" width="800" height="600" class="block mx-auto"></canvas>
+                
+                <!-- Game UI Overlay -->
+                <div id="gameUI" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                    <!-- Top HUD -->
+                    <div class="absolute top-4 left-4 right-4 flex justify-between items-start">
+                        <!-- Left Info Panel -->
+                        <div class="game-ui p-3 rounded-lg">
+                            <div class="text-cyan-400 pixel-font text-sm mb-2">
+                                <div>关卡: <span id="currentLevel" class="text-yellow-400">1</span></div>
+                                <div>分数: <span id="score" class="text-green-400">0</span></div>
+                                <div>经验: <span id="experience" class="text-purple-400">0</span></div>
+                                <div>目标: <span id="levelTarget" class="text-orange-400">击败10个敌机</span></div>
+                            </div>
+                            <!-- Health Bar -->
+                            <div class="mb-2">
+                                <div class="text-xs text-red-400 mb-1">生命值</div>
+                                <div class="w-32 h-4 bg-gray-800 rounded">
+                                    <div id="healthBar" class="health-bar h-full rounded" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <!-- Level Progress -->
+                            <div>
+                                <div class="text-xs text-yellow-400 mb-1">关卡进度 <span id="progressText">0/10</span></div>
+                                <div class="w-32 h-2 bg-gray-800 rounded">
+                                    <div id="levelProgress" class="level-progress h-full rounded" style="width: 0%"></div>
+                                </div>
                             </div>
                         </div>
-                        <!-- Level Progress -->
-                        <div>
-                            <div class="text-xs text-yellow-400 mb-1">关卡进度 <span id="progressText">0/10</span></div>
-                            <div class="w-32 h-2 bg-gray-800 rounded">
-                                <div id="levelProgress" class="level-progress h-full rounded" style="width: 0%"></div>
+
+                        <!-- Right Weapon Info -->
+                        <div class="game-ui p-3 rounded-lg">
+                            <div class="text-cyan-400 pixel-font text-xs mb-2">当前武器</div>
+                            <div id="currentWeapon" class="text-yellow-400 text-lg mb-2">🔫 单发</div>
+                            <div class="text-xs text-gray-400">
+                                <div>伤害: <span id="weaponDamage" class="text-red-400">10</span></div>
+                                <div>射速: <span id="weaponSpeed" class="text-blue-400">5/s</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Right Weapon Info -->
-                    <div class="game-ui p-3 rounded-lg">
-                        <div class="text-cyan-400 pixel-font text-xs mb-2">当前武器</div>
-                        <div id="currentWeapon" class="text-yellow-400 text-lg mb-2">🔫 单发</div>
-                        <div class="text-xs text-gray-400">
-                            <div>伤害: <span id="weaponDamage" class="text-red-400">10</span></div>
-                            <div>射速: <span id="weaponSpeed" class="text-blue-400">5/s</span></div>
+                    <!-- Boss Health Bar -->
+                    <div id="bossHealthContainer" class="absolute top-20 left-1/2 transform -translate-x-1/2 hidden">
+                        <div class="text-center mb-2">
+                            <div id="bossName" class="text-red-400 pixel-font text-lg font-bold">BOSS</div>
+                        </div>
+                        <div class="w-96 h-6 bg-gray-900 rounded">
+                            <div id="bossHealthBar" class="boss-health-bar h-full rounded" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Active Power-ups -->
+                    <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
+                        <div id="activePowerUps" class="flex space-x-2"></div>
+                    </div>
+
+                    <!-- Achievement Notifications -->
+                    <div id="achievementContainer" class="absolute top-1/4 right-4 space-y-2"></div>
+
+                    <!-- Level Transition Overlay -->
+                    <div id="levelTransition" class="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden">
+                        <div class="level-info">
+                            <div id="transitionText">关卡 2</div>
+                            <div id="transitionSubtext" class="text-lg mt-2">准备战斗!</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Boss Health Bar -->
-                <div id="bossHealthContainer" class="absolute top-20 left-1/2 transform -translate-x-1/2 hidden">
-                    <div class="text-center mb-2">
-                        <div id="bossName" class="text-red-400 pixel-font text-lg font-bold">BOSS</div>
-                    </div>
-                    <div class="w-96 h-6 bg-gray-900 rounded">
-                        <div id="bossHealthBar" class="boss-health-bar h-full rounded" style="width: 100%"></div>
-                    </div>
-                </div>
-
-                <!-- Active Power-ups -->
-                <div class="absolute top-4 left-1/2 transform -translate-x-1/2">
-                    <div id="activePowerUps" class="flex space-x-2"></div>
-                </div>
-
-                <!-- Achievement Notifications -->
-                <div id="achievementContainer" class="absolute top-1/4 right-4 space-y-2"></div>
-
-                <!-- Level Transition Overlay -->
-                <div id="levelTransition" class="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden">
-                    <div class="level-info">
-                        <div id="transitionText">关卡 2</div>
-                        <div id="transitionSubtext" class="text-lg mt-2">准备战斗!</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Menu Screen -->
-            <div id="menuScreen" class="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center">
-                <div class="text-center">
-                    <h1 class="text-6xl font-bold text-cyan-400 pixel-font mb-8">
-                        <i class="fas fa-fighter-jet"></i> 像素飞机大战
-                    </h1>
-                    <h2 class="text-2xl text-yellow-400 mb-8">经典怀旧版</h2>
-                    
-                    <div class="space-y-4 mb-8">
-                        <button id="startGameBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
-                            <i class="fas fa-play mr-2"></i> 开始游戏
-                        </button>
-                        <button id="instructionsBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
-                            <i class="fas fa-question mr-2"></i> 游戏说明
-                        </button>
-                    </div>
-
-                    <div class="text-sm text-gray-400 pixel-font">
-                        <p>最高分: <span id="highScore" class="text-yellow-400">0</span></p>
-                        <p>最高关卡: <span id="highestLevel" class="text-green-400">1</span></p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Instructions Screen -->
-            <div id="instructionsScreen" class="absolute inset-0 bg-black bg-opacity-95 hidden overflow-y-auto">
-                <div class="p-8 text-white pixel-font">
-                    <button id="backToMenuBtn" class="btn-game px-4 py-2 rounded mb-6">
-                        <i class="fas fa-arrow-left mr-2"></i> 返回主菜单
-                    </button>
-                    
-                    <h2 class="text-3xl text-cyan-400 mb-6">游戏说明</h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h3 class="text-xl text-yellow-400 mb-4">🎮 操作方式</h3>
-                            <ul class="space-y-2 text-sm">
-                                <li><strong>PC端:</strong> WASD移动, 空格射击</li>
-                                <li><strong>移动端:</strong> 触控拖拽移动, 自动射击</li>
-                                <li><strong>暂停:</strong> P键或ESC键</li>
-                            </ul>
-
-                            <h3 class="text-xl text-yellow-400 mb-4 mt-6">🔫 武器系统</h3>
-                            <ul class="space-y-1 text-sm">
-                                <li>🔫 单发射击 - 基础武器</li>
-                                <li>🔫 双管枪 - 左右并列射击</li>
-                                <li>🌟 散射炮 - 三发扇形</li>
-                                <li>💥 超级散射 - 五发大范围</li>
-                                <li>🔴 激光器 - 连续伤害</li>
-                                <li>🚀 导弹系统 - 自动追踪</li>
-                                <li>⚛️ 等离子炮 - 穿透攻击</li>
-                            </ul>
-
-                            <h3 class="text-xl text-yellow-400 mb-4 mt-6">🏆 关卡系统</h3>
-                            <ul class="space-y-1 text-sm">
-                                <li>关卡1-2: 基础敌机，教学阶段</li>
-                                <li>关卡3: 第一个BOSS - 重装战机</li>
-                                <li>关卡4-5: 中等难度，多种敌机</li>
-                                <li>关卡6: 第二个BOSS - 巨型母舰</li>
-                                <li>关卡7-8: 高难度，装甲敌机</li>
-                                <li>关卡9: 第三个BOSS - 终极战舰</li>
-                                <li>关卡10: 最终关卡，所有敌机</li>
-                                <li>关卡11+: 无尽模式，持续挑战</li>
-                            </ul>
-                        </div>
+                <!-- Menu Screen -->
+                <div id="menuScreen" class="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center">
+                    <div class="text-center">
+                        <h1 class="text-6xl font-bold text-cyan-400 pixel-font mb-8">
+                            <i class="fas fa-fighter-jet"></i> 像素飞机大战
+                        </h1>
+                        <h2 class="text-2xl text-yellow-400 mb-8">移动端优化版</h2>
                         
-                        <div>
-                            <h3 class="text-xl text-yellow-400 mb-4">🎁 道具系统</h3>
-                            <div class="text-sm space-y-1">
-                                <div><strong>基础道具:</strong></div>
-                                <div>❤️ 生命药剂 - 恢复生命值</div>
-                                <div>🛡️ 护盾发生器 - 15秒无敌</div>
-                                <div>⚡ 能量核心 - 恢复武器能量</div>
-                                
-                                <div class="mt-3"><strong>增强道具:</strong></div>
-                                <div>💨 速度提升 - 移动速度翻倍</div>
-                                <div>🔥 射速狂暴 - 射击频率x3</div>
-                                <div>🧲 超级磁铁 - 吸引道具</div>
-                                <div>💎 经验加倍 - 双倍奖励</div>
-                                <div>⭐ 幸运星 - 提高掉落率</div>
-                                <div>🎯 精准射击 - 增大命中</div>
-                            </div>
+                        <div class="space-y-4 mb-8">
+                            <button id="startGameBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
+                                <i class="fas fa-play mr-2"></i> 开始游戏
+                            </button>
+                            <button id="instructionsBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
+                                <i class="fas fa-question mr-2"></i> 游戏说明
+                            </button>
+                            <button id="debugToggleBtn" class="btn-game px-6 py-2 rounded-lg text-sm block mx-auto">
+                                <i class="fas fa-bug mr-2"></i> 调试模式
+                            </button>
+                        </div>
 
-                            <h3 class="text-xl text-yellow-400 mb-4 mt-6">👾 敌机类型</h3>
-                            <ul class="space-y-1 text-sm">
-                                <li>🛸 基础战机 - 普通移动</li>
-                                <li>⚡ 快速侦察机 - 高速移动</li>
-                                <li>🛡️ 重装轰炸机 - 高血量</li>
-                                <li>🔮 护盾战机 - 需多次攻击</li>
-                                <li>💥 分裂战机 - 分裂成小型机</li>
-                                <li>💣 自爆机 - 靠近时自爆</li>
-                            </ul>
+                        <div class="text-sm text-gray-400 pixel-font">
+                            <p>最高分: <span id="highScore" class="text-yellow-400">0</span></p>
+                            <p>最高关卡: <span id="highestLevel" class="text-green-400">1</span></p>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Game Over Screen -->
-            <div id="gameOverScreen" class="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden">
-                <div class="text-center">
-                    <h2 class="text-4xl font-bold text-red-400 pixel-font mb-4">游戏结束</h2>
-                    <div class="mb-6">
-                        <p class="text-xl text-yellow-400">最终分数: <span id="finalScore">0</span></p>
-                        <p class="text-lg text-green-400">到达关卡: <span id="finalLevel">1</span></p>
-                        <p class="text-lg text-purple-400">击败敌机: <span id="enemiesKilled">0</span></p>
-                    </div>
-                    <div class="space-y-3">
-                        <button id="restartBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
-                            <i class="fas fa-redo mr-2"></i> 重新开始
+                <!-- Instructions Screen -->
+                <div id="instructionsScreen" class="absolute inset-0 bg-black bg-opacity-95 hidden overflow-y-auto">
+                    <div class="p-8 text-white pixel-font">
+                        <button id="backToMenuBtn" class="btn-game px-4 py-2 rounded mb-6">
+                            <i class="fas fa-arrow-left mr-2"></i> 返回主菜单
                         </button>
-                        <button id="mainMenuBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
-                            <i class="fas fa-home mr-2"></i> 主菜单
+                        
+                        <h2 class="text-3xl text-cyan-400 mb-6">游戏说明</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="text-xl text-yellow-400 mb-4">🎮 操作方式</h3>
+                                <ul class="space-y-2 text-sm">
+                                    <li><strong>PC端:</strong> WASD移动, 空格射击</li>
+                                    <li><strong>移动端:</strong> 触控拖拽移动, 自动射击</li>
+                                    <li><strong>暂停:</strong> P键或ESC键</li>
+                                </ul>
+
+                                <h3 class="text-xl text-yellow-400 mb-4 mt-6">🔫 武器系统</h3>
+                                <ul class="space-y-1 text-sm">
+                                    <li>🔫 单发射击 - 基础武器</li>
+                                    <li>🔫 双管枪 - 左右并列射击</li>
+                                    <li>🌟 散射炮 - 三发扇形</li>
+                                    <li>💥 超级散射 - 五发大范围</li>
+                                    <li>🔴 激光器 - 连续伤害</li>
+                                    <li>🚀 导弹系统 - 自动追踪</li>
+                                    <li>⚛️ 等离子炮 - 穿透攻击</li>
+                                </ul>
+
+                                <h3 class="text-xl text-yellow-400 mb-4 mt-6">🏆 关卡系统</h3>
+                                <ul class="space-y-1 text-sm">
+                                    <li>关卡1-2: 基础敌机，教学阶段</li>
+                                    <li>关卡3: 第一个BOSS - 重装战机</li>
+                                    <li>关卡4-5: 中等难度，多种敌机</li>
+                                    <li>关卡6: 第二个BOSS - 巨型母舰</li>
+                                    <li>关卡7-8: 高难度，装甲敌机</li>
+                                    <li>关卡9: 第三个BOSS - 终极战舰</li>
+                                    <li>关卡10: 最终关卡，所有敌机</li>
+                                    <li>关卡11+: 无尽模式，持续挑战</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-xl text-yellow-400 mb-4">🎁 道具系统</h3>
+                                <div class="text-sm space-y-1">
+                                    <div><strong>基础道具:</strong></div>
+                                    <div>❤️ 生命药剂 - 恢复生命值</div>
+                                    <div>🛡️ 护盾发生器 - 15秒无敌</div>
+                                    <div>⚡ 能量核心 - 恢复武器能量</div>
+                                    
+                                    <div class="mt-3"><strong>增强道具:</strong></div>
+                                    <div>💨 速度提升 - 移动速度翻倍</div>
+                                    <div>🔥 射速狂暴 - 射击频率x3</div>
+                                    <div>🧲 超级磁铁 - 吸引道具</div>
+                                    <div>💎 经验加倍 - 双倍奖励</div>
+                                    <div>⭐ 幸运星 - 提高掉落率</div>
+                                    <div>🎯 精准射击 - 增大命中</div>
+                                </div>
+
+                                <h3 class="text-xl text-yellow-400 mb-4 mt-6">👾 敌机类型</h3>
+                                <ul class="space-y-1 text-sm">
+                                    <li>🛸 基础战机 - 普通移动</li>
+                                    <li>⚡ 快速侦察机 - 高速移动</li>
+                                    <li>🛡️ 重装轰炸机 - 高血量</li>
+                                    <li>🔮 护盾战机 - 需多次攻击</li>
+                                    <li>💥 分裂战机 - 分裂成小型机</li>
+                                    <li>💣 自爆机 - 靠近时自爆</li>
+                                </ul>
+
+                                <h3 class="text-xl text-yellow-400 mb-4 mt-6">📱 移动端操作提示</h3>
+                                <ul class="space-y-1 text-sm">
+                                    <li>• 使用屏幕下方的虚拟摇杆控制飞机</li>
+                                    <li>• 飞机会自动射击，无需额外操作</li>
+                                    <li>• 摇杆中心点会跟随您的触控移动</li>
+                                    <li>• 道具会自动拾取，磁铁道具增强拾取范围</li>
+                                    <li>• 建议横屏游戏以获得更好体验</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Over Screen -->
+                <div id="gameOverScreen" class="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden">
+                    <div class="text-center">
+                        <h2 class="text-4xl font-bold text-red-400 pixel-font mb-4">游戏结束</h2>
+                        <div class="mb-6">
+                            <p class="text-xl text-yellow-400">最终分数: <span id="finalScore">0</span></p>
+                            <p class="text-lg text-green-400">到达关卡: <span id="finalLevel">1</span></p>
+                            <p class="text-lg text-purple-400">击败敌机: <span id="enemiesKilled">0</span></p>
+                        </div>
+                        <div class="space-y-3">
+                            <button id="restartBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
+                                <i class="fas fa-redo mr-2"></i> 重新开始
+                            </button>
+                            <button id="mainMenuBtn" class="btn-game px-8 py-3 rounded-lg text-xl block mx-auto">
+                                <i class="fas fa-home mr-2"></i> 主菜单
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Level Complete Screen -->
+                <div id="levelCompleteScreen" class="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden">
+                    <div class="text-center">
+                        <h2 class="text-4xl font-bold text-green-400 pixel-font mb-4">关卡完成!</h2>
+                        <div class="mb-6">
+                            <p class="text-xl text-yellow-400">关卡 <span id="completedLevel">1</span> 完成</p>
+                            <p class="text-lg text-cyan-400">评分: <span id="levelRating">A</span></p>
+                            <p class="text-lg text-purple-400">获得经验: <span id="expGained">100</span></p>
+                        </div>
+                        <button id="nextLevelBtn" class="btn-game px-8 py-3 rounded-lg text-xl">
+                            <i class="fas fa-arrow-right mr-2"></i> 下一关
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Level Complete Screen -->
-            <div id="levelCompleteScreen" class="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden">
-                <div class="text-center">
-                    <h2 class="text-4xl font-bold text-green-400 pixel-font mb-4">关卡完成!</h2>
-                    <div class="mb-6">
-                        <p class="text-xl text-yellow-400">关卡 <span id="completedLevel">1</span> 完成</p>
-                        <p class="text-lg text-cyan-400">评分: <span id="levelRating">A</span></p>
-                        <p class="text-lg text-purple-400">获得经验: <span id="expGained">100</span></p>
+                <!-- Mobile Controls -->
+                <div id="mobileControls" class="mobile-controls hidden">
+                    <div class="control-pad" id="controlPad">
+                        <div class="control-center" id="controlCenter"></div>
                     </div>
-                    <button id="nextLevelBtn" class="btn-game px-8 py-3 rounded-lg text-xl">
-                        <i class="fas fa-arrow-right mr-2"></i> 下一关
-                    </button>
-                </div>
-            </div>
-
-            <!-- Mobile Controls -->
-            <div id="mobileControls" class="mobile-controls hidden">
-                <div class="control-pad" id="controlPad">
-                    <div class="control-center"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // 移动端调试模式
+        let debugMode = false;
+        let debugInfo = null;
+
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            debugInfo = document.getElementById('debugInfo');
+            debugInfo.style.display = debugMode ? 'block' : 'none';
+        }
+
+        function updateDebugInfo(info) {
+            if (debugMode && debugInfo) {
+                debugInfo.innerHTML = info;
+            }
+        }
+
         // Game Engine
         class Game {
             constructor() {
                 this.canvas = document.getElementById('gameCanvas');
                 this.ctx = this.canvas.getContext('2d');
-                this.width = this.canvas.width;
-                this.height = this.canvas.height;
+                
+                // 响应式画布设置
+                this.setupResponsiveCanvas();
                 
                 // Game state
                 this.state = 'menu';
@@ -458,7 +582,18 @@
                 this.keys = {};
                 this.mousePos = { x: 0, y: 0 };
                 this.touchPos = { x: 0, y: 0 };
-                this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                this.isMobile = this.detectMobile();
+                
+                // 移动端触控状态
+                this.touchState = {
+                    active: false,
+                    startX: 0,
+                    startY: 0,
+                    currentX: 0,
+                    currentY: 0,
+                    deltaX: 0,
+                    deltaY: 0
+                };
                 
                 // Game settings
                 this.lastTime = 0;
@@ -477,6 +612,54 @@
                 this.init();
             }
             
+            detectMobile() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                       ('ontouchstart' in window) ||
+                       (navigator.maxTouchPoints > 0);
+            }
+            
+            setupResponsiveCanvas() {
+                const updateCanvasSize = () => {
+                    const container = this.canvas.parentElement;
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    // 计算最佳尺寸
+                    let targetWidth = 800;
+                    let targetHeight = 600;
+                    
+                    if (this.isMobile) {
+                        const availableWidth = window.innerWidth - 20;
+                        const availableHeight = window.innerHeight - 200; // 为控制器留空间
+                        
+                        const scaleX = availableWidth / targetWidth;
+                        const scaleY = availableHeight / targetHeight;
+                        const scale = Math.min(scaleX, scaleY, 1);
+                        
+                        targetWidth = Math.floor(targetWidth * scale);
+                        targetHeight = Math.floor(targetHeight * scale);
+                    }
+                    
+                    this.canvas.style.width = targetWidth + 'px';
+                    this.canvas.style.height = targetHeight + 'px';
+                    
+                    // 获取实际显示尺寸
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.canvasScale = {
+                        x: this.canvas.width / rect.width,
+                        y: this.canvas.height / rect.height
+                    };
+                    
+                    this.width = this.canvas.width;
+                    this.height = this.canvas.height;
+                };
+                
+                updateCanvasSize();
+                window.addEventListener('resize', updateCanvasSize);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(updateCanvasSize, 100);
+                });
+            }
+            
             init() {
                 this.setupEventListeners();
                 this.updateUI();
@@ -490,6 +673,35 @@
             }
             
             setupEventListeners() {
+                // 防止页面滚动和缩放
+                document.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                document.addEventListener('touchend', (e) => {
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+
+                // 防止双击缩放
+                let lastTouchEnd = 0;
+                document.addEventListener('touchend', (event) => {
+                    const now = (new Date()).getTime();
+                    if (now - lastTouchEnd <= 300) {
+                        event.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, false);
+                
                 // Keyboard events
                 document.addEventListener('keydown', (e) => {
                     this.keys[e.code] = true;
@@ -504,20 +716,33 @@
                     this.keys[e.code] = false;
                 });
                 
-                // Mouse events
+                // Canvas mouse events
                 this.canvas.addEventListener('mousemove', (e) => {
                     const rect = this.canvas.getBoundingClientRect();
-                    this.mousePos.x = e.clientX - rect.left;
-                    this.mousePos.y = e.clientY - rect.top;
+                    this.mousePos.x = (e.clientX - rect.left) * this.canvasScale.x;
+                    this.mousePos.y = (e.clientY - rect.top) * this.canvasScale.y;
                 });
                 
-                // Touch events
+                // Canvas touch events
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.touchPos.x = (touch.clientX - rect.left) * this.canvasScale.x;
+                    this.touchPos.y = (touch.clientY - rect.top) * this.canvasScale.y;
+                    
+                    updateDebugInfo(`Canvas Touch Start: ${this.touchPos.x.toFixed(0)}, ${this.touchPos.y.toFixed(0)}`);
+                }, { passive: false });
+                
                 this.canvas.addEventListener('touchmove', (e) => {
                     e.preventDefault();
+                    const touch = e.touches[0];
                     const rect = this.canvas.getBoundingClientRect();
-                    this.touchPos.x = e.touches[0].clientX - rect.left;
-                    this.touchPos.y = e.touches[0].clientY - rect.top;
-                });
+                    this.touchPos.x = (touch.clientX - rect.left) * this.canvasScale.x;
+                    this.touchPos.y = (touch.clientY - rect.top) * this.canvasScale.y;
+                    
+                    updateDebugInfo(`Canvas Touch Move: ${this.touchPos.x.toFixed(0)}, ${this.touchPos.y.toFixed(0)}`);
+                }, { passive: false });
                 
                 // Menu buttons
                 document.getElementById('startGameBtn').addEventListener('click', () => this.startGame());
@@ -526,52 +751,125 @@
                 document.getElementById('restartBtn').addEventListener('click', () => this.startGame());
                 document.getElementById('mainMenuBtn').addEventListener('click', () => this.showMenu());
                 document.getElementById('nextLevelBtn').addEventListener('click', () => this.nextLevel());
+                document.getElementById('debugToggleBtn').addEventListener('click', toggleDebugMode);
             }
             
             setupMobileControls() {
                 const controlPad = document.getElementById('controlPad');
+                const controlCenter = document.getElementById('controlCenter');
                 let isDragging = false;
+                let padRect = null;
                 
-                const handleTouch = (e) => {
-                    const rect = controlPad.getBoundingClientRect();
-                    const centerX = rect.left + rect.width / 2;
-                    const centerY = rect.top + rect.height / 2;
-                    const touch = e.touches[0];
-                    
-                    const deltaX = touch.clientX - centerX;
-                    const deltaY = touch.clientY - centerY;
-                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                    
-                    if (distance < 60) {
-                        const normalizedX = deltaX / 60;
-                        const normalizedY = deltaY / 60;
-                        
-                        if (this.player) {
-                            this.player.vx = normalizedX * this.player.speed;
-                            this.player.vy = normalizedY * this.player.speed;
-                        }
-                    }
+                const updatePadRect = () => {
+                    padRect = controlPad.getBoundingClientRect();
                 };
                 
-                controlPad.addEventListener('touchstart', (e) => {
+                const handleTouchStart = (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    
+                    updatePadRect();
                     isDragging = true;
-                    handleTouch(e);
-                });
+                    controlCenter.classList.add('active');
+                    
+                    const touch = e.touches[0];
+                    this.touchState.active = true;
+                    this.touchState.startX = touch.clientX;
+                    this.touchState.startY = touch.clientY;
+                    
+                    updateDebugInfo(`Touch Start: ${touch.clientX.toFixed(0)}, ${touch.clientY.toFixed(0)}`);
+                    
+                    this.handleControlInput(e);
+                };
                 
-                controlPad.addEventListener('touchmove', (e) => {
+                const handleTouchMove = (e) => {
                     e.preventDefault();
-                    if (isDragging) handleTouch(e);
-                });
+                    e.stopPropagation();
+                    
+                    if (!isDragging || !padRect) return;
+                    
+                    const touch = e.touches[0];
+                    this.touchState.currentX = touch.clientX;
+                    this.touchState.currentY = touch.clientY;
+                    
+                    updateDebugInfo(`Touch Move: ${touch.clientX.toFixed(0)}, ${touch.clientY.toFixed(0)}, Active: ${this.touchState.active}`);
+                    
+                    this.handleControlInput(e);
+                };
                 
-                controlPad.addEventListener('touchend', (e) => {
+                const handleTouchEnd = (e) => {
                     e.preventDefault();
+                    e.stopPropagation();
+                    
                     isDragging = false;
+                    controlCenter.classList.remove('active');
+                    
+                    this.touchState.active = false;
+                    this.touchState.deltaX = 0;
+                    this.touchState.deltaY = 0;
+                    
                     if (this.player) {
                         this.player.vx = 0;
                         this.player.vy = 0;
                     }
+                    
+                    updateDebugInfo('Touch End');
+                };
+                
+                // 绑定事件
+                controlPad.addEventListener('touchstart', handleTouchStart, { passive: false });
+                controlPad.addEventListener('touchmove', handleTouchMove, { passive: false });
+                controlPad.addEventListener('touchend', handleTouchEnd, { passive: false });
+                controlPad.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+                
+                // 更新摇杆矩形大小
+                updatePadRect();
+                window.addEventListener('resize', updatePadRect);
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(updatePadRect, 100);
                 });
+            }
+            
+            handleControlInput(e) {
+                if (!this.touchState.active || !this.player) return;
+                
+                const touch = e.touches[0];
+                const controlPad = document.getElementById('controlPad');
+                const rect = controlPad.getBoundingClientRect();
+                
+                // 计算相对于摇杆中心的偏移
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                const deltaX = touch.clientX - centerX;
+                const deltaY = touch.clientY - centerY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // 限制在摇杆范围内
+                const maxDistance = rect.width / 2 - 10;
+                
+                let normalizedX = 0;
+                let normalizedY = 0;
+                
+                if (distance > 5) { // 最小死区
+                    const clampedDistance = Math.min(distance, maxDistance);
+                    normalizedX = (deltaX / distance) * (clampedDistance / maxDistance);
+                    normalizedY = (deltaY / distance) * (clampedDistance / maxDistance);
+                }
+                
+                // 更新玩家速度
+                const maxSpeed = this.player.speed;
+                this.player.vx = normalizedX * maxSpeed;
+                this.player.vy = normalizedY * maxSpeed;
+                
+                // 更新摇杆中心位置视觉效果
+                const controlCenter = document.getElementById('controlCenter');
+                const moveX = normalizedX * (maxDistance * 0.8);
+                const moveY = normalizedY * (maxDistance * 0.8);
+                
+                controlCenter.style.transform = `translate(calc(-50% + ${moveX}px), calc(-50% + ${moveY}px))`;
+                
+                updateDebugInfo(`Control: dx=${deltaX.toFixed(0)}, dy=${deltaY.toFixed(0)}, dist=${distance.toFixed(0)}, nx=${normalizedX.toFixed(2)}, ny=${normalizedY.toFixed(2)}`);
             }
             
             startGame() {
@@ -2282,15 +2580,19 @@
             game = new Game();
         });
         
-        // Prevent context menu on right click
+        // 防止右键菜单
         document.addEventListener('contextmenu', (e) => {
             e.preventDefault();
         });
         
-        // Prevent scrolling on touch devices
-        document.addEventListener('touchmove', (e) => {
+        // 防止页面拖拽和选择
+        document.addEventListener('dragstart', (e) => {
             e.preventDefault();
-        }, { passive: false });
+        });
+
+        document.addEventListener('selectstart', (e) => {
+            e.preventDefault();
+        });
     </script>
 </body>
 </html>
